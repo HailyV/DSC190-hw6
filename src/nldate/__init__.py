@@ -126,7 +126,7 @@ def _normalize(s: str) -> str:
 def _parse_weekday_expression(s: str, today: date) -> date | None:
     for prefix in ("next ", "last ", "this "):
         if s.startswith(prefix):
-            weekday_name = s[len(prefix):]
+            weekday_name = s[len(prefix) :]
             if weekday_name not in _WEEKDAYS:
                 return None
             target = _WEEKDAYS[weekday_name]
