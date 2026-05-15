@@ -143,11 +143,16 @@ def _parse_absolute_date(s: str, default_year: int) -> date | None:
     without_commas = cleaned.replace(",", "")
     formats_with_year = (
         "%Y-%m-%d",
+        "%Y/%m/%d",   # 2025/12/04
+        "%m/%d/%Y",   # 12/04/2025  (already there)
+        "%m-%d-%Y",   # 12-04-2025
+        "%d-%m-%Y",   # 04-12-2025
         "%B %d %Y",
         "%b %d %Y",
         "%d %B %Y",
         "%d %b %Y",
-        "%m/%d/%Y",
+        "%B %d, %Y",  # December 4, 2025 (with comma before stripping)
+        "%b %d, %Y",
     )
     for fmt in formats_with_year:
         try:
