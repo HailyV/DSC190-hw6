@@ -88,10 +88,13 @@ def _parse_inner(s: str, today: date, depth: int) -> date:
         return today + timedelta(days=1)
     if normalized == "yesterday":
         return today - timedelta(days=1)
-
-    weekday_result = _parse_weekday_expression(normalized, today)
-    if weekday_result is not None:
-        return weekday_result
+    if normalized == "day after tomorrow":
+        return today + timedelta(days=2)
+    if normalized == "day before yesterday":
+        return today - timedelta(days=2)
+        weekday_result = _parse_weekday_expression(normalized, today)
+        if weekday_result is not None:
+            return weekday_result
 
     # try absolute date again on normalised string
     absolute_result2 = _parse_absolute_date(normalized, today.year)
@@ -120,16 +123,7 @@ def _normalize(s: str) -> str:
     lowered = s.strip().lower()
     lowered = re.sub(r"\s+", " ", lowered)
     lowered = re.sub(r"\bon\s+", "", lowered, count=1)
-    # strip leading "the"
     lowered = re.sub(r"^the\s+", "", lowered)
-    # "day after/before X" -> "1 day after/before X"
-    lowered = re.sub(r"\bday\s+(after|before|from)\b", r"1 day \1", lowered)
-    # "week after/before X" -> "1 week after/before X"
-    lowered = re.sub(r"\bweek\s+(after|before|from)\b", r"1 week \1", lowered)
-    # "month after/before X" -> "1 month after/before X"
-    lowered = re.sub(r"\bmonth\s+(after|before|from)\b", r"1 month \1", lowered)
-    # "year after/before X" -> "1 year after/before X"
-    lowered = re.sub(r"\byear\s+(after|before|from)\b", r"1 year \1", lowered)
     return lowered
 
 
