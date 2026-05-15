@@ -14,6 +14,8 @@ _WEEKDAYS = {
 }
 
 _NUMBER_WORDS = {
+    "a": 1,
+    "an": 1,
     "zero": 0,
     "one": 1,
     "two": 2,
@@ -46,8 +48,18 @@ _NUMBER_WORDS = {
 }
 
 _MONTH_NAMES = {
-    "january", "february", "march", "april", "may", "june",
-    "july", "august", "september", "october", "november", "december",
+    "january",
+    "february",
+    "march",
+    "april",
+    "may",
+    "june",
+    "july",
+    "august",
+    "september",
+    "october",
+    "november",
+    "december",
 }
 
 
@@ -61,8 +73,7 @@ def _parse_inner(s: str, today: date, depth: int) -> date:
     if depth > 6:
         raise ValueError("Expression is too deeply nested")
 
-    # try absolute date on the original (pre-normalize) string first
-    # so that month abbreviations with capitals are preserved for strptime
+    # try absolute date on original string first (preserves capitalisation for %b)
     absolute_result = _parse_absolute_date(s, today.year)
     if absolute_result is not None:
         return absolute_result
@@ -82,7 +93,7 @@ def _parse_inner(s: str, today: date, depth: int) -> date:
     if weekday_result is not None:
         return weekday_result
 
-    # try absolute date again on normalized string
+    # try absolute date again on normalised string
     absolute_result2 = _parse_absolute_date(normalized, today.year)
     if absolute_result2 is not None:
         return absolute_result2
@@ -136,31 +147,28 @@ def _parse_weekday_expression(s: str, today: date) -> date | None:
 
 
 def _parse_absolute_date(s: str, default_year: int) -> date | None:
-    # strip ordinal suffixes (1st -> 1, 2nd -> 2, etc.)
     cleaned = _strip_ordinal_suffixes(s.strip())
-    # remove periods from abbreviated month names: Dec. -> Dec, Jan. -> Jan
+    # remove periods from abbreviated month names: Dec. -> Dec
     cleaned = re.sub(r"\b([A-Za-z]{3})\.", r"\1", cleaned)
-    # normalise whitespace
     cleaned = re.sub(r"\s+", " ", cleaned)
     without_commas = cleaned.replace(",", "").strip()
 
-    # all formats with an explicit year
     formats_with_year = (
-        "%Y-%m-%d",       # 2025-12-01
-        "%Y/%m/%d",       # 2025/12/04
-        "%m/%d/%Y",       # 12/01/2025
-        "%m-%d-%Y",       # 12-01-2025
-        "%d/%m/%Y",       # 01/12/2025  (ambiguous but included)
-        "%B %d %Y",       # December 1 2025
-        "%b %d %Y",       # Dec 1 2025
-        "%d %B %Y",       # 1 December 2025
-        "%d %b %Y",       # 1 Dec 2025
-        "%B %d, %Y",      # December 1, 2025
-        "%b %d, %Y",      # Dec 1, 2025
-        "%d %B, %Y",      # 1 December, 2025
-        "%d %b, %Y",      # 1 Dec, 2025
-        "%Y %B %d",       # 2025 December 1
-        "%Y %b %d",       # 2025 Dec 1
+        "%Y-%m-%d",
+        "%Y/%m/%d",
+        "%m/%d/%Y",
+        "%m-%d-%Y",
+        "%d/%m/%Y",
+        "%B %d %Y",
+        "%b %d %Y",
+        "%d %B %Y",
+        "%d %b %Y",
+        "%B %d, %Y",
+        "%b %d, %Y",
+        "%d %B, %Y",
+        "%d %b, %Y",
+        "%Y %B %d",
+        "%Y %b %d",
     )
     for fmt in formats_with_year:
         for candidate in (without_commas, cleaned):
@@ -169,14 +177,13 @@ def _parse_absolute_date(s: str, default_year: int) -> date | None:
             except ValueError:
                 continue
 
-    # formats without a year — infer from default_year
     has_month_name = any(m in cleaned.lower() for m in _MONTH_NAMES)
     if has_month_name:
         formats_no_year = (
-            "%B %d",   # December 1
-            "%b %d",   # Dec 1
-            "%d %B",   # 1 December
-            "%d %b",   # 1 Dec
+            "%B %d",
+            "%b %d",
+            "%d %B",
+            "%d %b",
         )
         for fmt in formats_no_year:
             for candidate in (without_commas, cleaned):
